@@ -57,6 +57,17 @@ class ItemCreateSchema(Schema):
     discount_price = fields.Float(load_default=None, allow_none=True)
     store_id = fields.Int(required=True)
 
+    @pre_load
+    def strip_name(self, data, **kwargs):
+        if "name" in data and isinstance(data["name"], str):
+            data["name"] = data["name"].strip()
+        return data
+
+    @validates("name")
+    def reject_blank_name(self, value, **kwargs):
+        if not value.strip():
+            raise ValidationError("Name cannot be blank.")
+
     # ----------------------------------------------------------
     # TODO 3: Security Validation — Trim whitespace, reject blanks
     #
@@ -110,3 +121,9 @@ class ItemCreateSchema(Schema):
     #   Test: {"name": "Mouse", "price": 50, "discount_price": 100, "store_id": 1}
     #         should fail with 422
     # ----------------------------------------------------------
+    @validates_schema
+    def check_discount(self, data, **kwargs):
+        discount = data.get("discount_price")
+        price = data.get("price")
+        if discount is not None and price is not None and discount > price:
+            raise ValidationError("Discount price cannot exceed regular price.")

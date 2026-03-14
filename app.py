@@ -101,7 +101,13 @@ class ItemList(MethodView):
         on the current application state.
         """
         global next_item_id
+        
+        if not store_exists(item_data["store_id"]):
+            abort(404, message="Store not found.")
 
+        
+        if duplicate_name_in_store(item_data["name"], item_data["store_id"]):
+            abort(409, message="An item with this name already exists in this store.")
         # --------------------------------------------------
         # TODO 1: Business Validation — Store must exist
         #
